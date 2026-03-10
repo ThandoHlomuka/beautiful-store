@@ -12,6 +12,12 @@ export const metadata: Metadata = {
   description: "Discover curated, premium products with a beautiful shopping experience.",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#0a0a0f",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -19,7 +25,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.variable}>
+      <body className={`${inter.className} ${inter.variable}`}>
         {children}
       </body>
     </html>
