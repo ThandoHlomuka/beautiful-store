@@ -9,6 +9,7 @@ All notable changes to the **LUXE Store** project will be documented in this fil
 - **Unified Navigation**: Implemented a responsive navigation system.
   - **Desktop**: Premium top-bar navigation with active state highlighting.
   - **Mobile**: Native-app style bottom tab bar for seamless one-handed browsing.
+- **Mixed Theme Implementation**: Replaced the pure dark theme with a sophisticated "Mixed" palette (Light base with Midnight Midnight accents) for a more modern, editorial feel.
 - **Enhanced Mobile UI**: 
   - Optimized product grid for smaller viewports (2-column layout).
   - Added Safari/iOS compatibility for backdrop blur effects.

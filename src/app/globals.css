@@ -3,27 +3,29 @@
 
 /* ===== DESIGN TOKENS ===== */
 :root {
-  /* Colors — Dark premium theme */
-  --bg-primary: #0a0a0f;
-  --bg-secondary: #12121a;
-  --bg-card: #1a1a26;
-  --bg-glass: rgba(26, 26, 38, 0.65);
-  --bg-sidebar: #0e0e16;
+  /* Colors — Mixed Premium Theme (Light base with Midnight accents) */
+  --bg-primary: #f8f9fc;
+  --bg-secondary: #f0f2f7;
+  --bg-card: #ffffff;
+  --bg-dark: #0a0a0f;
+  --bg-glass: rgba(255, 255, 255, 0.7);
+  --bg-sidebar: #ffffff;
 
-  --text-primary: #f0f0f5;
-  --text-secondary: #a0a0b8;
-  --text-muted: #6a6a80;
+  --text-primary: #0f1115;
+  --text-secondary: #4b5563;
+  --text-muted: #9ca3af;
+  --text-on-dark: #f0f0f5;
 
   --accent-primary: #7c5cff;
-  --accent-secondary: #5ce1e6;
-  --accent-gradient: linear-gradient(135deg, #7c5cff 0%, #5ce1e6 100%);
+  --accent-secondary: #00d2ff;
+  --accent-gradient: linear-gradient(135deg, #7c5cff 0%, #00d2ff 100%);
   --accent-gradient-warm: linear-gradient(135deg, #ff6b6b 0%, #ffa07a 100%);
   --accent-gradient-gold: linear-gradient(135deg, #f0c27f 0%, #fc5c7d 100%);
 
-  --border-color: rgba(255, 255, 255, 0.06);
-  --border-subtle: rgba(255, 255, 255, 0.03);
+  --border-color: rgba(0, 0, 0, 0.06);
+  --border-subtle: rgba(0, 0, 0, 0.03);
 
-  --success: #22c55e;
+  --success: #10b981;
   --warning: #f59e0b;
   --danger: #ef4444;
 
@@ -44,10 +46,10 @@
   --radius-full: 9999px;
 
   /* Shadows */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 20px rgba(124, 92, 255, 0.15);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --shadow-glow: 0 0 20px rgba(124, 92, 255, 0.1);
 
   /* Transitions */
   --transition-fast: 0.15s ease;
@@ -281,6 +283,9 @@ button {
   padding: var(--space-3xl) var(--space-xl);
   position: relative;
   overflow: hidden;
+  background-color: var(--bg-dark);
+  /* Mixed theme: Dark Hero */
+  color: var(--text-on-dark);
 }
 
 .hero::before {
@@ -329,7 +334,8 @@ button {
 
 .hero-subtitle {
   font-size: 1.15rem;
-  color: var(--text-secondary);
+  color: var(--text-on-dark);
+  opacity: 0.8;
   max-width: 500px;
   margin: 0 auto var(--space-xl);
   line-height: 1.7;
@@ -405,6 +411,7 @@ button {
   background-position: center;
   position: relative;
   overflow: hidden;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .product-card .card-image::after {
@@ -414,7 +421,7 @@ button {
   left: 0;
   right: 0;
   height: 40%;
-  background: linear-gradient(to top, var(--bg-card), transparent);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.03), transparent);
 }
 
 .product-card .card-placeholder {
@@ -717,8 +724,11 @@ button {
   padding: var(--space-2xl) var(--space-xl);
   border-top: 1px solid var(--border-color);
   text-align: center;
-  color: var(--text-muted);
+  color: var(--text-on-dark);
+  background-color: var(--bg-dark);
+  /* Mixed theme: Dark Footer */
   font-size: 0.85rem;
+  opacity: 0.9;
 }
 
 /* ===== BUTTONS ===== */

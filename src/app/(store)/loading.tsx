@@ -5,11 +5,11 @@ export default function Loading() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            background: "#0a0a0f",
-            color: "#f0f0f5",
-            fontFamily: "Inter, sans-serif"
+            background: "var(--bg-primary)",
+            color: "var(--text-primary)",
+            fontFamily: "var(--font-main)"
         }}>
-            <p>Loading...</p>
+            <p style={{ fontWeight: 500, letterSpacing: "0.05em", opacity: 0.8 }}>Loading LUXE Experience...</p>
         </div>
     );
 }
