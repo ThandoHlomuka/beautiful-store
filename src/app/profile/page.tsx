@@ -13,6 +13,8 @@ export default function ProfilePage() {
     const [name, setName] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState("");
+    const [orders, setOrders] = useState<any[]>([]);
+    const [isLoadingOrders, setIsLoadingOrders] = useState(true);
 
     useEffect(() => {
         if (status === "unauthenticated") {
@@ -22,6 +24,26 @@ export default function ProfilePage() {
             setName(session.user.name);
         }
     }, [status, session, router]);
+
+    useEffect(() => {
+        const fetchOrders = async () => {
+            if (status === "authenticated") {
+                try {
+                    const res = await fetch("/api/orders/user");
+                    if (res.ok) {
+                        const data = await res.json();
+                        setOrders(data);
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch orders:", error);
+                } finally {
+                    setIsLoadingOrders(false);
+                }
+            }
+        };
+
+        fetchOrders();
+    }, [status]);
 
     if (status === "loading") {
         return <div style={{ padding: "4rem", textAlign: "center", color: "white" }}>Loading profile...</div>;
@@ -141,12 +163,38 @@ export default function ProfilePage() {
                 )}
             </div>
 
-            {/* Orders Section Note */}
+            {/* Orders Section */}
             <div style={{ backgroundColor: "#09090b", border: "1px solid #27272a", borderRadius: "0.75rem", padding: "2rem" }}>
                 <h2 style={{ fontSize: "1.25rem", fontWeight: "600", marginBottom: "1.5rem" }}>Order History</h2>
-                <div style={{ textAlign: "center", padding: "2rem", color: "#a1a1aa" }}>
-                    <p>No orders found yet.</p>
-                </div>
+                
+                {isLoadingOrders ? (
+                    <div style={{ padding: "2rem", color: "#a1a1aa", textAlign: "center" }}>Loading orders...</div>
+                ) : orders.length === 0 ? (
+                    <div style={{ textAlign: "center", padding: "2rem", color: "#a1a1aa" }}>
+                        <p>No orders found yet.</p>
+                    </div>
+                ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                        {orders.map((order) => (
+                            <div key={order.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem", border: "1px solid #27272a", borderRadius: "0.5rem", backgroundColor: "#000" }}>
+                                <div>
+                                    <p style={{ fontWeight: "600", marginBottom: "0.25rem" }}>Order #{order.id.slice(-6).toUpperCase()}</p>
+                                    <p style={{ fontSize: "0.875rem", color: "#a1a1aa" }}>{new Date(order.createdAt).toLocaleDateString()}</p>
+                                </div>
+                                <div style={{ textAlign: "right" }}>
+                                    <p style={{ fontWeight: "bold", fontSize: "1.125rem", color: "#fff" }}>${order.total.toFixed(2)}</p>
+                                    <span style={{ 
+                                        display: "inline-block", padding: "0.25rem 0.5rem", borderRadius: "9999px", fontSize: "0.75rem", fontWeight: "600", marginTop: "0.5rem",
+                                        backgroundColor: order.status === "DELIVERED" ? "rgba(34,197,94,0.1)" : "rgba(234,179,8,0.1)",
+                                        color: order.status === "DELIVERED" ? "#22c55e" : "#eab308"
+                                    }}>
+                                        {order.status}
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );

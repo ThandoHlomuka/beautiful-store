@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
 
 export async function GET() {
     try {
@@ -14,14 +15,21 @@ export async function GET() {
 
 export async function POST(request: Request) {
     try {
+        const session = await auth();
         const body = await request.json();
         const { total, status } = body;
 
+        const orderData: any = {
+            total: parseFloat(total),
+            status: status || "PENDING",
+        };
+
+        if (session?.user?.id) {
+            orderData.userId = session.user.id;
+        }
+
         const newOrder = await prisma.order.create({
-            data: {
-                total: parseFloat(total),
-                status: status || "PENDING",
-            },
+            data: orderData,
         });
 
         return NextResponse.json(newOrder, { status: 201 });
