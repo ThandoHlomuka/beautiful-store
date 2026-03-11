@@ -3,12 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/context/CartContext";
+import { useSession } from "next-auth/react";
 
 export default function StoreNav() {
     const { totalItems } = useCart();
     const pathname = usePathname();
+    const { data: session } = useSession();
 
     const isActive = (path: string) => pathname === path;
+    const isAdmin = (session?.user as any)?.role === "ADMIN";
 
     return (
         <nav className="store-nav">
@@ -28,9 +31,11 @@ export default function StoreNav() {
                         {totalItems > 0 && <span className="cart-count">{totalItems}</span>}
                     </Link>
                 </li>
-                <li>
-                    <Link href="/admin" className={pathname.startsWith("/admin") ? "active" : ""}>Admin</Link>
-                </li>
+                {isAdmin && (
+                    <li>
+                        <Link href="/admin" className={pathname.startsWith("/admin") ? "active" : ""}>Admin</Link>
+                    </li>
+                )}
             </ul>
         </nav>
     );

@@ -3,15 +3,19 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, ShoppingBag, ShoppingCart, User } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 export default function MobileNav() {
     const pathname = usePathname();
+    const { data: session } = useSession();
+
+    const isAdmin = (session?.user as any)?.role === "ADMIN";
 
     const navItems = [
         { name: "Home", href: "/", icon: Home },
         { name: "Shop", href: "/products", icon: ShoppingBag },
         { name: "Cart", href: "/cart", icon: ShoppingCart },
-        { name: "Admin", href: "/admin", icon: User },
+        ...(isAdmin ? [{ name: "Admin", href: "/admin", icon: User }] : []),
     ];
 
     return (
