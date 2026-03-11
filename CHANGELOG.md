@@ -9,8 +9,8 @@ All notable changes to the **LUXE Store** project will be documented in this fil
 - **Unified Navigation**: Implemented a responsive navigation system.
   - **Desktop**: Premium top-bar navigation with active state highlighting.
   - **Mobile**: Native-app style bottom tab bar for seamless one-handed browsing.
-- **Mixed Theme Implementation**: Replaced the pure dark theme with a sophisticated "Mixed" palette (Light base with Midnight Midnight accents) for a more modern, editorial feel.
-- **Vercel Build Stability**: Resolved Prisma build-time connectivity issues by forcing dynamic rendering on data-heavy store pages.
+- **Mixed Theme Implementation**: Replaced the pure dark theme with a sophisticated "Mixed" palette (Light base with Midnight accents) for a more modern, editorial feel.
+- **Vercel Build Stability**: Resolved Prisma build-time connectivity issues by forcing dynamic rendering on all data-dependent pages (Storefront & Admin).
 - **Enhanced Mobile UI**: 
   - Optimized product grid for smaller viewports (2-column layout).
   - Added Safari/iOS compatibility for backdrop blur effects.
