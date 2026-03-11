@@ -9,6 +9,9 @@ All notable changes to the **LUXE Store** project will be documented in this fil
 - **Unified Navigation**: Implemented a responsive navigation system.
   - **Desktop**: Premium top-bar navigation with active state highlighting.
   - **Mobile**: Native-app style bottom tab bar for seamless one-handed browsing.
+- **Admin Access Control**: 
+  - Restricted `/admin` routes to authorized accounts only via middleware.
+  - Automatically hide administrative menu options from the storefront for non-admins.
 - **Mixed Theme Implementation**: Replaced the pure dark theme with a sophisticated "Mixed" palette (Light base with Midnight accents) for a more modern, editorial feel.
 - **Vercel Build Stability**: Resolved Prisma build-time connectivity issues by forcing dynamic rendering on all data-dependent pages (Storefront & Admin).
 - **Enhanced Mobile UI**: 

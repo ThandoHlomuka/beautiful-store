@@ -12,6 +12,7 @@ export default function StoreNav() {
 
     const isActive = (path: string) => pathname === path;
     const isAdmin = (session?.user as any)?.role === "ADMIN";
+    const isLoggedIn = !!session?.user;
 
     return (
         <nav className="store-nav">
@@ -34,6 +35,15 @@ export default function StoreNav() {
                 {isAdmin && (
                     <li>
                         <Link href="/admin" className={pathname.startsWith("/admin") ? "active" : ""}>Admin</Link>
+                    </li>
+                )}
+                {isLoggedIn ? (
+                    <li>
+                        <Link href="/profile" className={isActive("/profile") ? "active" : ""}>Profile</Link>
+                    </li>
+                ) : (
+                    <li>
+                        <Link href="/login" className={isActive("/login") ? "active" : ""}>Login</Link>
                     </li>
                 )}
             </ul>
