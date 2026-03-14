@@ -86,7 +86,9 @@ function DashboardContent() {
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: '📊' },
     { id: 'products', label: 'Products', icon: '📦' },
-    { id: 'orders', label: 'Orders', icon: '🛒' }
+    { id: 'orders', label: 'Orders', icon: '🛒' },
+    { id: 'emails', label: 'Email Templates', icon: '📧' },
+    { id: 'chat', label: 'Chat', icon: '💬' }
   ];
 
   return (
@@ -285,11 +287,19 @@ function DashboardContent() {
                       </tbody>
                     </table>
                   </div>
-                )}
-              </div>
-            )}
-          </main>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'emails' && (
+            <EmailTemplatesTab />
+          )}
+
+          {activeTab === 'chat' && (
+            <ChatTab />
+          )}
         </div>
+      </div>
       </div>
 
       {showAddModal && (
@@ -359,5 +369,172 @@ export default function AdminDashboard() {
     <ProductProvider>
       <DashboardContent />
     </ProductProvider>
+  );
+}
+
+function EmailTemplatesTab() {
+  const [templates, setTemplates] = useState({
+    signup: { subject: 'Welcome to Metra Marketplace!', body: '<h1>Welcome {name}!</h1><p>Thank you for joining Metra Marketplace.</p>' },
+    login: { subject: 'New Login Notification', body: '<h1>Hello {name}!</h1><p>A new login was detected on your account.</p>' },
+    order: { subject: 'Order Confirmation', body: '<h1>Order Confirmed!</h1><p>Thank you for your order. Order #{orderId}</p>' },
+    verification: { subject: 'Verify Your Email', body: '<h1>Verify Your Email</h1><p>Click below to verify:</p><a href="#">Verify</a>' }
+  });
+  const [editingType, setEditingType] = useState<string | null>(null);
+
+  const saveTemplate = () => {
+    localStorage.setItem('emailTemplates', JSON.stringify(templates));
+    setEditingType(null);
+  };
+
+  const emailTypes = [
+    { key: 'signup', label: 'Welcome Email', description: 'Sent when users sign up' },
+    { key: 'login', label: 'Login Notification', description: 'Sent on new login' },
+    { key: 'order', label: 'Order Confirmation', description: 'Sent when order is placed' },
+    { key: 'verification', label: 'Email Verification', description: 'Sent for email verification' }
+  ];
+
+  return (
+    <div className="bg-white rounded-2xl p-6 shadow-sm">
+      <h2 className="text-2xl font-bold mb-6">Email Templates</h2>
+      <div className="grid md:grid-cols-2 gap-4 mb-6">
+        {emailTypes.map(type => (
+          <div key={type.key} className="p-4 border rounded-xl">
+            <div className="flex justify-between items-start mb-2">
+              <div>
+                <h3 className="font-semibold">{type.label}</h3>
+                <p className="text-sm text-gray-500">{type.description}</p>
+              </div>
+              <button onClick={() => setEditingType(type.key)} className="text-blue-600 hover:underline text-sm">
+                Edit
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {editingType && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-2xl">
+            <h3 className="text-xl font-bold mb-4">Edit {emailTypes.find(t => t.key === editingType)?.label}</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Subject</label>
+                <input
+                  type="text"
+                  value={templates[editingType as keyof typeof templates].subject}
+                  onChange={e => setTemplates({ ...templates, [editingType]: { ...templates[editingType as keyof typeof templates], subject: e.target.value } })}
+                  className="w-full px-4 py-2 border rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Body (HTML)</label>
+                <textarea
+                  value={templates[editingType as keyof typeof templates].body}
+                  onChange={e => setTemplates({ ...templates, [editingType]: { ...templates[editingType as keyof typeof templates], body: e.target.value } })}
+                  className="w-full px-4 py-2 border rounded-lg font-mono text-sm"
+                  rows={8}
+                />
+                <p className="text-xs text-gray-500 mt-2">Use {'{name}'}, {'{email}'}, {'{orderId}'} as placeholders</p>
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button onClick={() => setEditingType(null)} className="flex-1 btn-secondary">Cancel</button>
+              <button onClick={saveTemplate} className="flex-1 btn-primary">Save Template</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ChatTab() {
+  const [messages, setMessages] = useState<any[]>([]);
+  const [reply, setReply] = useState('');
+  const [selectedUser, setSelectedUser] = useState<string | null>(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('chatMessages');
+    if (saved) setMessages(JSON.parse(saved));
+  }, []);
+
+  const users = [...new Set(messages.map(m => m.senderId))];
+
+  const userMessages = selectedUser ? messages.filter(m => m.senderId === selectedUser) : [];
+
+  const sendReply = () => {
+    if (!reply.trim() || !selectedUser) return;
+    const adminMsg = {
+      id: Date.now().toString(),
+      senderId: 'admin',
+      senderName: 'Support',
+      content: reply,
+      timestamp: new Date().toISOString(),
+      read: true
+    };
+    const updated = [...messages, adminMsg];
+    setMessages(updated);
+    localStorage.setItem('chatMessages', JSON.stringify(updated));
+    setReply('');
+  };
+
+  return (
+    <div className="bg-white rounded-2xl p-6 shadow-sm">
+      <h2 className="text-2xl font-bold mb-6">Live Chat</h2>
+      <div className="grid md:grid-cols-3 gap-6">
+        <div className="border-r pr-4">
+          <h3 className="font-semibold mb-3">Users</h3>
+          {users.length === 0 ? (
+            <p className="text-gray-500">No messages yet</p>
+          ) : (
+            <div className="space-y-2">
+              {users.map(userId => {
+                const lastMsg = messages.findLast(m => m.senderId === userId);
+                return (
+                  <button
+                    key={userId}
+                    onClick={() => setSelectedUser(userId)}
+                    className={`w-full text-left p-3 rounded-lg ${selectedUser === userId ? 'bg-purple-50' : 'hover:bg-gray-50'}`}
+                  >
+                    <p className="font-medium">{userId}</p>
+                    <p className="text-sm text-gray-500 truncate">{lastMsg?.content}</p>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+        <div className="col-span-2">
+          {selectedUser ? (
+            <>
+              <div className="h-80 overflow-y-auto space-y-3 mb-4">
+                {userMessages.map(msg => (
+                  <div key={msg.id} className={`flex ${msg.senderId === 'admin' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[70%] p-3 rounded-xl ${msg.senderId === 'admin' ? 'bg-purple-600 text-white' : 'bg-gray-100'}`}>
+                      <p>{msg.content}</p>
+                      <p className={`text-xs mt-1 ${msg.senderId === 'admin' ? 'text-white/70' : 'text-gray-500'}`}>
+                        {new Date(msg.timestamp).toLocaleTimeString()}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={reply}
+                  onChange={e => setReply(e.target.value)}
+                  placeholder="Type a reply..."
+                  className="flex-1 px-4 py-2 border rounded-lg"
+                />
+                <button onClick={sendReply} className="btn-primary">Send</button>
+              </div>
+            </>
+          ) : (
+            <p className="text-gray-500 text-center py-12">Select a user to view messages</p>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }

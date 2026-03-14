@@ -4,18 +4,24 @@ import { useState } from 'react';
 import Header from '@/components/Header';
 import CartSidebar from '@/components/CartSidebar';
 import ProductCard from '@/components/ProductCard';
+import ProductPopup from '@/components/ProductPopup';
+import ChatWidget from '@/components/ChatWidget';
 import { useProducts } from '@/context/ProductContext';
 import { categories } from '@/data/products';
+import { Product } from '@/data/products';
 import Link from 'next/link';
 
 export default function Home() {
-  const { featuredProducts } = useProducts();
+  const { featuredProducts, products } = useProducts();
   const [cartOpen, setCartOpen] = useState(false);
+  const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
 
   return (
     <div className="min-h-screen">
       <Header />
       <CartSidebar isOpen={cartOpen} onClose={() => setCartOpen(false)} />
+      <ChatWidget />
+      <ProductPopup product={quickViewProduct} isOpen={!!quickViewProduct} onClose={() => setQuickViewProduct(null)} />
       
       <main className="pt-16">
         <section className="relative min-h-[90vh] flex items-center bg-gradient-to-br from-blue-50 via-white to-orange-50 overflow-hidden">
@@ -127,7 +133,7 @@ export default function Home() {
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {featuredProducts.slice(0, 4).map((product, index) => (
                 <div key={product.id} className="animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
-                  <ProductCard product={product} />
+                  <ProductCard product={product} onQuickView={setQuickViewProduct} />
                 </div>
               ))}
             </div>
