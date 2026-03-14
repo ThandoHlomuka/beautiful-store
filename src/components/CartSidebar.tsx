@@ -10,29 +10,56 @@ interface CartSidebarProps {
   onClose: () => void;
 }
 
+interface FormErrors {
+  name?: string;
+  email?: string;
+}
+
 export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
-  const { items, updateQuantity, removeFromCart, total, clearCart } = useCart();
+  const { items, updateQuantity, removeFromCart, total, clearCart, addOrder } = useCart();
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [formData, setFormData] = useState({ name: '', email: '' });
+  const [errors, setErrors] = useState<FormErrors>({});
   const [orderPlaced, setOrderPlaced] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+    if (!formData.name.trim()) {
+      newErrors.name = 'Name is required';
+    } else if (formData.name.trim().length < 2) {
+      newErrors.name = 'Name must be at least 2 characters';
+    }
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleCheckout = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateForm()) return;
+    
+    setIsSubmitting(true);
     const order = {
       id: Date.now().toString(),
       items,
       total,
       status: 'pending' as const,
-      customerName: formData.name,
-      customerEmail: formData.email,
+      customerName: formData.name.trim(),
+      customerEmail: formData.email.trim(),
       createdAt: new Date().toISOString(),
     };
-    const { addOrder } = useCart();
-    localStorage.setItem('lastOrder', JSON.stringify(order));
+    addOrder(order);
     setOrderPlaced(true);
+    setIsSubmitting(false);
     setTimeout(() => {
       setCheckoutOpen(false);
       setOrderPlaced(false);
+      setFormData({ name: '', email: '' });
       clearCart();
       onClose();
     }, 2000);
@@ -46,8 +73,8 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
       <div className="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-xl animate-slide-in flex flex-col">
         <div className="flex items-center justify-between p-4 border-b">
           <h2 className="text-xl font-bold">Shopping Cart</h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button onClick={onClose} aria-label="Close cart" className="p-2 hover:bg-gray-100 rounded-full">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -132,37 +159,26 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                 <p className="text-gray-500 mt-2">Thank you for your purchase</p>
               </div>
             ) : (
-              <form onSubmit={handleCheckout} className="space-y-3">
+              <form onSubmit={handleCheckout} className="space-y-3" noValidate>
                 <h3 className="font-bold text-lg">Checkout Details</h3>
-                <input
-                  type="text"
-                  placeholder="Your Name"
-                  required
-                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  value={formData.name}
-                  onChange={e => setFormData({ ...formData, name: e.target.value })}
-                />
-                <input
-                  type="email"
-                  placeholder="Your Email"
-                  required
-                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  value={formData.email}
-                  onChange={e => setFormData({ ...formData, email: e.target.value })}
-                />
-                <div className="flex gap-2">
-                  <button type="button" onClick={() => setCheckoutOpen(false)} className="flex-1 btn-secondary">
-                    Back
-                  </button>
-                  <button type="submit" className="flex-1 btn-primary">
-                    Place Order
-                  </button>
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Your Name"
+                    aria-label="Your Name"
+                    aria-invalid={!!errors.name}
+                    className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.name ? 'border-red-500' : ''}`}
+                    value={formData.name}
+                    onChange={e => { setFormData({ ...formData, name: e.target.value }); if (errors.name) setErrors({ ...errors, name: undefined }); }}
+                  />
+                  {errors.name && <p className="text-red-500 text-sm mt-1" role="alert">{errors.name}</p>}
                 </div>
-              </form>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
+                <div>
+                  <input
+                    type="email"
+                    placeholder="Your Email"
+                    aria-label="Your Email"
+                    aria-invalid={!!errors.email}
+                    className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.email ? 'border-red-500' : ''}`}
+                    value={formData.email}
+                    onChange={e => { setFormData({ ...formData, email: e.targ
