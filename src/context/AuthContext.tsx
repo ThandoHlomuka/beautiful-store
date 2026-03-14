@@ -28,8 +28,12 @@ export interface Address {
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
+  isGuest: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signup: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  loginWithGoogle: (googleData: { email: string; name: string; picture?: string }) => Promise<{ success: boolean; error?: string }>;
+  loginWithWhatsapp: (phone: string, name: string) => Promise<{ success: boolean; error?: string }>;
+  continueAsGuest: () => void;
   logout: () => void;
   updateProfile: (data: Partial<User>) => void;
   addAddress: (address: Omit<Address, 'id'>) => void;
@@ -43,6 +47,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isGuest, setIsGuest] = useState(false);
 
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
@@ -54,6 +59,93 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const generateId = () => Math.random().toString(36).substring(2) + Date.now().toString(36);
+
+  const continueAsGuest = () => {
+    setIsGuest(true);
+    const guestId = `guest-${generateId()}`;
+    localStorage.setItem('guestSession', guestId);
+    console.log('👤 Continuing as guest');
+  };
+
+  const loginWithGoogle = async (googleData: { email: string; name: string; picture?: string }): Promise<{ success: boolean; error?: string }> => {
+    setIsLoading(true);
+    
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    let foundUser = users.find((u: any) => u.email === googleData.email);
+    
+    if (!foundUser) {
+      foundUser = {
+        id: generateId(),
+        email: googleData.email,
+        name: googleData.name,
+        picture: googleData.picture,
+        addresses: [],
+        wishlist: [],
+        createdAt: new Date().toISOString(),
+        emailVerified: true,
+        loginProvider: 'google',
+      };
+      users.push(foundUser);
+      localStorage.setItem('users', JSON.stringify(users));
+    }
+
+    const sessionToken = generateId();
+    const session = { userId: foundUser.id, token: sessionToken, expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000 };
+    
+    localStorage.setItem('session', JSON.stringify(session));
+    localStorage.setItem('user', JSON.stringify(foundUser));
+    setIsGuest(false);
+    setUser(foundUser);
+    setIsLoading(false);
+    
+    console.log('🔐 Logged in with Google:', googleData.email);
+    return { success: true };
+  };
+
+  const loginWithWhatsapp = async (phone: string, name: string): Promise<{ success: boolean; error?: string }> => {
+    setIsLoading(true);
+    
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    const existingUser = users.find((u: any) => u.phone === phone);
+    
+    if (existingUser) {
+      const sessionToken = generateId();
+      const session = { userId: existingUser.id, token: sessionToken, expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000 };
+      localStorage.setItem('session', JSON.stringify(session));
+      localStorage.setItem('user', JSON.stringify(existingUser));
+      setUser(existingUser);
+    } else {
+      const newUser = {
+        id: generateId(),
+        email: `${phone}@whatsapp.user`,
+        name,
+        phone,
+        addresses: [],
+        wishlist: [],
+        createdAt: new Date().toISOString(),
+        emailVerified: true,
+        loginProvider: 'whatsapp',
+      };
+      users.push(newUser);
+      localStorage.setItem('users', JSON.stringify(users));
+      
+      const sessionToken = generateId();
+      const session = { userId: newUser.id, token: sessionToken, expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000 };
+      localStorage.setItem('session', JSON.stringify(session));
+      localStorage.setItem('user', JSON.stringify(newUser));
+      setUser(newUser);
+    }
+    
+    setIsGuest(false);
+    setIsLoading(false);
+    
+    console.log('💬 Logged in with WhatsApp:', phone);
+    return { success: true };
+  };
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true);
@@ -217,9 +309,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider value={{ 
       user, 
-      isLoading, 
+      isLoading,
+      isGuest,
       login, 
       signup, 
+      loginWithGoogle,
+      loginWithWhatsapp,
+      continueAsGuest,
       logout, 
       updateProfile, 
       addAddress, 

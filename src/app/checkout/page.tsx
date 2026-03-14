@@ -7,6 +7,9 @@ import Image from 'next/image';
 import { useCart } from '@/context/CartContext';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useAuth } from '@/context/AuthContext';
+import { useTransactionLog } from '@/context/TransactionLogContext';
+import PayFastPayment from '@/components/PayFastPayment';
+import ShipmentTracker from '@/components/ShipmentTracker';
 import { logUpdate } from '@/lib/updateLogger';
 
 interface ShippingOption {
@@ -26,17 +29,20 @@ const shippingOptions: ShippingOption[] = [
 export default function CheckoutPage() {
   const { items, total, clearCart } = useCart();
   const { formatPrice } = useCurrency();
-  const { user, addAddress } = useAuth();
+  const { user, addAddress, isGuest, continueAsGuest } = useAuth();
+  const { logTransaction } = useTransactionLog();
   const router = useRouter();
   
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
+  const [orderId, setOrderId] = useState('');
   const [selectedShipping, setSelectedShipping] = useState(shippingOptions[0]);
+  const [showPayment, setShowPayment] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
-    phone: '',
+    phone: user?.phone || '',
     address: '',
     city: '',
     province: '',
@@ -45,10 +51,10 @@ export default function CheckoutPage() {
   });
 
   useEffect(() => {
-    if (!user && !orderPlaced) {
-      router.push('/login?redirect=/checkout');
+    if (!user && !isGuest) {
+      continueAsGuest();
     }
-  }, [user, orderPlaced, router]);
+  }, [user, isGuest, continueAsGuest]);
 
   const shippingCost = selectedShipping.price;
   const finalTotal = total + shippingCost;
@@ -63,10 +69,21 @@ export default function CheckoutPage() {
       return;
     }
 
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    if (!showPayment) {
+      setShowPayment(true);
+      setLoading(false);
+      return;
+    }
+  };
+
+  const handlePaymentSuccess = async (paymentData: any) => {
+    setLoading(true);
+    
+    const newOrderId = Date.now().toString();
+    setOrderId(newOrderId);
 
     const order = {
-      id: Date.now().toString(),
+      id: newOrderId,
       items,
       subtotal: total,
       shipping: shippingCost,
@@ -77,16 +94,31 @@ export default function CheckoutPage() {
       customerEmail: formData.email,
       shippingAddress: `${formData.address}, ${formData.city}, ${formData.province} ${formData.postalCode}`,
       createdAt: new Date().toISOString(),
+      trackingNumber: `MF-${newOrderId.substring(0, 8).toUpperCase()}`,
     };
 
     const existingOrders = JSON.parse(localStorage.getItem('orders') || '[]');
     localStorage.setItem('orders', JSON.stringify([order, ...existingOrders]));
 
+    logTransaction({
+      type: 'order',
+      userId: user?.id || 'guest',
+      userEmail: formData.email,
+      amount: finalTotal,
+      currency: 'ZAR',
+      status: 'completed',
+      details: { orderId: newOrderId, items: items.length, paymentId: paymentData.paymentId }
+    });
+
+    logUpdate('success', 'Order', `New order placed: R${finalTotal.toFixed(2)}`, { orderId: newOrderId, items: items.length });
+
     clearCart();
     setOrderPlaced(true);
     setLoading(false);
-    
-    logUpdate('success', 'Order', `New order placed: R${finalTotal.toFixed(2)}`, { orderId: order.id, items: items.length });
+  };
+
+  const handlePaymentCancel = () => {
+    setShowPayment(false);
   };
 
   if (items.length === 0 && !orderPlaced) {
@@ -104,27 +136,34 @@ export default function CheckoutPage() {
 
   if (orderPlaced) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="text-center max-w-md">
-          <div className="w-24 h-24 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-6">
-            <svg className="w-12 h-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+        <div className="max-w-2xl mx-auto px-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-sm mb-6">
+            <div className="text-center mb-6">
+              <div className="w-24 h-24 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
+                <svg className="w-12 h-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h1 className="text-3xl font-bold gradient-text mb-2">Order Confirmed!</h1>
+              <p className="text-gray-600 dark:text-gray-400">
+                Thank you for your order. We've sent a confirmation email to {formData.email}.
+              </p>
+            </div>
+            <div className="flex justify-center gap-3">
+              <Link href="/products" className="btn-primary">
+                Continue Shopping
+              </Link>
+              <Link href="/account" className="btn-secondary">
+                View Orders
+              </Link>
+            </div>
           </div>
-          <h1 className="text-3xl font-bold gradient-text mb-4">Order Confirmed!</h1>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Thank you for your order. We've sent a confirmation email to {formData.email}.
-            Your order will be shipped via {selectedShipping.name}.
-          </p>
-          <div className="space-y-3">
-            <Link href="/products" className="btn-primary block">
-              Continue Shopping
-            </Link>
-            <Link href="/account" className="btn-secondary block">
-              View Orders
-            </Link>
-          </div>
+          <ShipmentTracker orderId={orderId} />
         </div>
+      </div>
+    );
+  }
       </div>
     );
   }
@@ -269,7 +308,7 @@ export default function CheckoutPage() {
                   </div>
                 )}
 
-                {step === 3 && (
+                {step === 3 && !showPayment && (
                   <div className="space-y-4 animate-fade-in">
                     <h2 className="text-xl font-bold mb-4">Order Review</h2>
                     <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 space-y-2 text-sm">
@@ -290,15 +329,36 @@ export default function CheckoutPage() {
                   </div>
                 )}
 
+                {showPayment && (
+                  <div className="animate-fade-in">
+                    <PayFastPayment
+                      config={{
+                        amount: finalTotal,
+                        itemName: `Metra Marketplace Order (${items.length} items)`,
+                        itemDescription: `Order for ${formData.name}`,
+                        nameFirst: formData.name.split(' ')[0],
+                        nameLast: formData.name.split(' ').slice(1).join(' '),
+                        emailAddress: formData.email,
+                        cellNumber: formData.phone,
+                      }}
+                      onSuccess={handlePaymentSuccess}
+                      onCancel={handlePaymentCancel}
+                      onError={(error) => console.error('Payment error:', error)}
+                    />
+                  </div>
+                )}
+
                 <div className="flex gap-3 mt-6">
-                  {step > 1 && (
+                  {step > 1 && !showPayment && (
                     <button type="button" onClick={() => setStep(step - 1)} className="btn-secondary">
                       Back
                     </button>
                   )}
-                  <button type="submit" disabled={loading} className="flex-1 btn-primary">
-                    {loading ? 'Processing...' : step === 3 ? `Pay ${formatPrice(finalTotal)}` : 'Continue'}
-                  </button>
+                  {!showPayment && (
+                    <button type="submit" disabled={loading} className="flex-1 btn-primary">
+                      {loading ? 'Processing...' : step === 3 ? `Pay ${formatPrice(finalTotal)}` : 'Continue'}
+                    </button>
+                  )}
                 </div>
               </form>
             </div>

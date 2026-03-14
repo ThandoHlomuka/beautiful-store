@@ -6,6 +6,7 @@ import { AdminProvider } from "@/context/AdminContext";
 import { CurrencyProvider } from "@/context/CurrencyContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { ChatProvider } from "@/context/ChatContext";
+import { TransactionLogProvider } from "@/context/TransactionLogContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import UpdateNotifier from "@/components/UpdateNotifier";
 
@@ -53,20 +54,22 @@ export default function RootLayout({
       </head>
       <body className="antialiased light">
         <ErrorBoundary>
-          <AuthProvider>
-            <CurrencyProvider>
-              <AdminProvider>
-                <ProductProvider>
-                  <CartProvider>
-                    <ChatProvider>
-                      {children}
-                      <UpdateNotifier />
-                    </ChatProvider>
-                  </CartProvider>
-                </ProductProvider>
-              </AdminProvider>
-            </CurrencyProvider>
-          </AuthProvider>
+          <TransactionLogProvider>
+            <AuthProvider>
+              <CurrencyProvider>
+                <AdminProvider>
+                  <ProductProvider>
+                    <CartProvider>
+                      <ChatProvider>
+                        {children}
+                        <UpdateNotifier />
+                      </ChatProvider>
+                    </CartProvider>
+                  </ProductProvider>
+                </AdminProvider>
+              </CurrencyProvider>
+            </AuthProvider>
+          </TransactionLogProvider>
         </ErrorBoundary>
       </body>
     </html>
