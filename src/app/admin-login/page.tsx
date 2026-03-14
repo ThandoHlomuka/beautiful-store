@@ -4,8 +4,10 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAdmin } from '@/context/AdminContext';
+import { logUpdate } from '@/lib/updateLogger';
 
 export default function AdminLogin() {
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -18,10 +20,13 @@ export default function AdminLogin() {
     setError('');
 
     setTimeout(() => {
-      if (adminLogin(password)) {
+      const result = adminLogin(username, password);
+      if (result.success) {
+        logUpdate('success', 'Admin', `Admin logged in: ${username}`);
         router.push('/admin');
       } else {
-        setError('Invalid password');
+        setError(result.error || 'Invalid credentials');
+        logUpdate('warning', 'Admin', `Failed login attempt: ${username}`);
       }
       setLoading(false);
     }, 500);
@@ -41,18 +46,29 @@ export default function AdminLogin() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold text-white">Admin Login</h1>
-          <p className="text-gray-300 mt-2">Enter your credentials to access the dashboard</p>
+          <h1 className="text-3xl font-bold text-white">Admin Portal</h1>
+          <p className="text-gray-300 mt-2">Restricted access only</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Username</label>
+            <input
+              type="text"
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              placeholder="Enter username"
+              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              required
+            />
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">Password</label>
             <input
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              placeholder="Enter admin password"
+              placeholder="Enter password"
               className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               required
             />
@@ -69,7 +85,7 @@ export default function AdminLogin() {
             disabled={loading}
             className="w-full py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white font-semibold rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50"
           >
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? 'Authenticating...' : 'Access Dashboard'}
           </button>
         </form>
 
@@ -77,10 +93,6 @@ export default function AdminLogin() {
           <Link href="/" className="text-gray-400 hover:text-white text-sm">
             ← Back to Store
           </Link>
-        </div>
-
-        <div className="mt-4 p-3 bg-white/5 rounded-lg text-center">
-          <p className="text-gray-400 text-xs">Demo password: admin123</p>
         </div>
       </div>
     </div>
