@@ -210,8 +210,9 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
-              © 2026 LuxeStore. All rights reserved.
+            <div className="border-t border-gray-800 mt-12 pt-8 text-center">
+              <p className="text-gray-400">© 2026 LuxeStore. All rights reserved.</p>
+              <p className="text-gray-500 text-sm mt-2">Developed by Thando Hlomuka</p>
             </div>
           </div>
         </footer>

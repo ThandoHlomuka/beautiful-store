@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useCart } from '@/context/CartContext';
+import { useCurrency } from '@/context/CurrencyContext';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -17,6 +18,7 @@ interface FormErrors {
 
 export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
   const { items, updateQuantity, removeFromCart, total, clearCart, addOrder } = useCart();
+  const { formatPrice } = useCurrency();
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [formData, setFormData] = useState({ name: '', email: '' });
   const [errors, setErrors] = useState<FormErrors>({});
@@ -100,7 +102,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-medium text-sm truncate">{item.name}</h3>
-                    <p className="text-blue-600 font-bold">${item.price.toFixed(2)}</p>
+                    <p className="text-blue-600 font-bold">{formatPrice(item.price)}</p>
                     <div className="flex items-center gap-2 mt-2">
                       <button
                         onClick={() => updateQuantity(item.id, item.quantity - 1)}
@@ -136,7 +138,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
           <div className="border-t p-4 space-y-3">
             <div className="flex justify-between text-lg font-bold">
               <span>Total</span>
-              <span>${total.toFixed(2)}</span>
+              <span>{formatPrice(total)}</span>
             </div>
             <button
               onClick={() => setCheckoutOpen(true)}
