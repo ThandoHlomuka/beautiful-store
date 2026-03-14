@@ -4,26 +4,31 @@ import { createContext, useContext, useState, ReactNode } from 'react';
 
 interface AdminContextType {
   isAdmin: boolean;
-  adminLogin: (password: string) => boolean;
+  adminLogin: (username: string, password: string) => { success: boolean; error?: string };
   adminLogout: () => void;
 }
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+const ADMIN_USERNAME = 'ThandoHlomuka';
+const ADMIN_PASSWORD = 'Nozibusiso89';
 
 export function AdminProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
 
-  const adminLogin = (password: string) => {
-    if (password === ADMIN_PASSWORD) {
+  const adminLogin = (username: string, password: string): { success: boolean; error?: string } => {
+    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
       setIsAdmin(true);
-      return true;
+      localStorage.setItem('adminSession', 'true');
+      return { success: true };
     }
-    return false;
+    return { success: false, error: 'Invalid credentials' };
   };
 
-  const adminLogout = () => setIsAdmin(false);
+  const adminLogout = () => {
+    setIsAdmin(false);
+    localStorage.removeItem('adminSession');
+  };
 
   return (
     <AdminContext.Provider value={{ isAdmin, adminLogin, adminLogout }}>

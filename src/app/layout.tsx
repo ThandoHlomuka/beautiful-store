@@ -4,22 +4,25 @@ import { CartProvider } from "@/context/CartContext";
 import { ProductProvider } from "@/context/ProductContext";
 import { AdminProvider } from "@/context/AdminContext";
 import { CurrencyProvider } from "@/context/CurrencyContext";
+import { AuthProvider } from "@/context/AuthContext";
+import { ChatProvider } from "@/context/ChatContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import UpdateNotifier from "@/components/UpdateNotifier";
 
 export const metadata: Metadata = {
   title: {
-    default: "LuxeStore - Premium Online Shopping",
-    template: "%s | LuxeStore",
+    default: "Metra Marketplace - Premium Online Shopping",
+    template: "%s | Metra Marketplace",
   },
-  description: "Discover amazing products at great prices",
-  keywords: ["online shopping", "premium products", "electronics", "clothing", "beauty"],
+  description: "Discover amazing products at great prices - Your premier online shopping destination",
+  keywords: ["online shopping", "premium products", "electronics", "clothing", "beauty", "marketplace"],
   authors: [{ name: "Thando Hlomuka" }],
   creator: "Thando Hlomuka",
-  metadataBase: new URL("https://luxestore.com"),
+  metadataBase: new URL("https://metramarketplace.com"),
   openGraph: {
     type: "website",
     locale: "en_ZA",
-    siteName: "LuxeStore",
+    siteName: "Metra Marketplace",
   },
   twitter: {
     card: "summary_large_image",
@@ -34,7 +37,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
-  themeColor: "#2563eb",
+  themeColor: "#6366f1",
 };
 
 export default function RootLayout({
@@ -48,17 +51,22 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="apple-touch-icon" href="/favicon.ico" />
       </head>
-      <body className="antialiased">
+      <body className="antialiased light">
         <ErrorBoundary>
-          <CurrencyProvider>
-            <AdminProvider>
-              <ProductProvider>
-                <CartProvider>
-                  {children}
-                </CartProvider>
-              </ProductProvider>
-            </AdminProvider>
-          </CurrencyProvider>
+          <AuthProvider>
+            <CurrencyProvider>
+              <AdminProvider>
+                <ProductProvider>
+                  <CartProvider>
+                    <ChatProvider>
+                      {children}
+                      <UpdateNotifier />
+                    </ChatProvider>
+                  </CartProvider>
+                </ProductProvider>
+              </AdminProvider>
+            </CurrencyProvider>
+          </AuthProvider>
         </ErrorBoundary>
       </body>
     </html>
